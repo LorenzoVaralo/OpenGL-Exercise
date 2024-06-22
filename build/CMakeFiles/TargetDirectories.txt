@@ -1,0 +1,3 @@
+/home/loren/Documentos/Projects/Faculdade/ObjTexturizados/build/CMakeFiles/objetosTexturizados.dir
+/home/loren/Documentos/Projects/Faculdade/ObjTexturizados/build/CMakeFiles/edit_cache.dir
+/home/loren/Documentos/Projects/Faculdade/ObjTexturizados/build/CMakeFiles/rebuild_cache.dir
