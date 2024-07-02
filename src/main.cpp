@@ -4,16 +4,97 @@
 #include <ostream>
 #define STB_IMAGE_IMPLEMENTATION
 #include "./stb_image.h"
+#include <chrono>
 #include <iostream>
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, unsigned int ID, float movement_speed);
+unsigned int textures[4];
 
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+std::string imgpatharray[] = { 
+    "../field.png", 
+    "../imgs/1/D_Walk.png",
+    "../imgs/2/D_Walk.png",
+    "../imgs/4/D_Walk.png"
+};
 
+std::string movement_images[] = { 
+    "../imgs/4/U_Walk.png",
+    "../imgs/4/D_Walk.png",
+    "../imgs/4/Left_Walk.png",
+    "../imgs/4/Right_Walk.png"
+};
+
+GLfloat deltaPos[4][3];
+char last_movement_direction = 'w';
+
+void checkCompileErrors(unsigned int shader, std::string type){
+    int success;
+    char infoLog[1024];
+    if (type != "PROGRAM")
+    {
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            glGetShaderInfoLog(shader, 1024, NULL, infoLog);
+            std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+        }
+    }
+    else
+    {
+        glGetProgramiv(shader, GL_LINK_STATUS, &success);
+        if (!success)
+        {
+            glGetProgramInfoLog(shader, 1024, NULL, infoLog);
+            std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+        }
+    }
+}
+
+void load_images(unsigned int ID){
+    int num_of_images = 4;
+    for(int i = 0; i < num_of_images; i++){
+
+
+        glGenTextures(1, &textures[i]);
+        glBindTexture(GL_TEXTURE_2D, textures[i]); 
+         // set the texture wrapping parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        // set texture filtering parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // load image, create texture and generate mipmaps
+        int width, height, nrChannels;
+        stbi_set_flip_vertically_on_load(true);
+
+        unsigned char *data = stbi_load(imgpatharray[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            if(nrChannels == 4){
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            }
+            if(nrChannels == 3){
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            }
+            
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+        else
+        {
+            std::cout << "Failed to load texture" << std::endl;
+        }
+        stbi_image_free(data);
+    }
+    glUseProgram(ID);
+
+    glUniform1i(glGetUniformLocation(ID, "img_texture"), 0);
+
+}
 int main()
 {
     glfwInit();
@@ -51,11 +132,14 @@ int main()
         "\n"
         "out vec2 TexCoord;\n"
         "uniform vec3 deltaPos;\n"
+        "uniform int numSprites;\n"
+        "uniform int spriteStep;\n"
         "\n"
         "void main()\n"
         "{\n"
+        "	float fSpriteStep = float(spriteStep);\n"
         "	gl_Position = vec4(aPos.x + deltaPos.x, aPos.y + deltaPos.y, aPos.z + deltaPos.z, 1.0);\n"
-        "	TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
+        "	TexCoord = vec2((aTexCoord.x + fSpriteStep)/numSprites, aTexCoord.y);\n"
         "}\n";
 
     const char * fShaderCode = 
@@ -73,15 +157,18 @@ int main()
     vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vShaderCode, NULL);
     glCompileShader(vertex);
+    checkCompileErrors(vertex, "VERTEX");
     // fragment Shader
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fShaderCode, NULL);
     glCompileShader(fragment);
+    checkCompileErrors(fragment, "FRAGMENT");
     // shader Program
     ID = glCreateProgram();
     glAttachShader(ID, vertex);
     glAttachShader(ID, fragment);
     glLinkProgram(ID);
+    checkCompileErrors(ID, "PROGRAM");
 
     glDeleteShader(vertex);
     glDeleteShader(fragment);
@@ -143,11 +230,12 @@ int main()
     glEnableVertexAttribArray(1);
 
 
-    std::string imgpatharray[] = { 
-        "../field.png", 
-        "../Orc.png",
-        "../Orc.png",
-        "../Bee.png"
+    
+    int numOfSprites[] = {
+        1,
+        6,
+        6,
+        6
     };
 
     int num_of_images = sizeof(imgpatharray)/sizeof(imgpatharray[0]);
@@ -156,61 +244,24 @@ int main()
         {0.0f, 0.0f, 0.0f},
         {0.001f, 0.001f, 0.0f},
         {0.002f, 0.002f, 0.0f},
-        {0.0005f, 0.0001f, 0.0f},
+        {0.0f, 0.0f, 0.0f},
     };
 
-    GLfloat deltaPos[num_of_images][3];
-
-    unsigned int textures[num_of_images];
 
 
-    for(int i = 0; i < num_of_images; i++){
 
-        deltaPos[i][0] = 0.0f;
-        deltaPos[i][1] = 0.0f;
-        deltaPos[i][2] = 0.0f;
-
-        glGenTextures(1, &textures[i]);
-        glBindTexture(GL_TEXTURE_2D, textures[i]); 
-         // set the texture wrapping parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // set texture filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // load image, create texture and generate mipmaps
-        int width, height, nrChannels;
-        stbi_set_flip_vertically_on_load(true);
-
-        unsigned char *data = stbi_load(imgpatharray[i].c_str(), &width, &height, &nrChannels, 0);
-        if (data)
-        {
-            if(nrChannels == 4){
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-            }
-            if(nrChannels == 3){
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-            }
-            
-            glGenerateMipmap(GL_TEXTURE_2D);
-        }
-        else
-        {
-            std::cout << "Failed to load texture" << std::endl;
-        }
-        stbi_image_free(data);
-    }
-    glUseProgram(ID);
-
-    glUniform1i(glGetUniformLocation(ID, "img_texture"), 0);
+    load_images(ID);
 
     // render loop
     // -----------
+    int spriteStep = 0;
+    auto time = std::chrono::system_clock::now();
+
     while (!glfwWindowShouldClose(window))
     {
         // input
         // -----
-        processInput(window);
+        processInput(window, ID, 0.005f);
 
         // render
         // ------
@@ -221,6 +272,8 @@ int main()
             // bind textures on corresponding texture units
             glUseProgram(ID); 
             glUniform3fv(glGetUniformLocation(ID, "deltaPos"), 1, &deltaPos[i][0]);
+            glUniform1i(glGetUniformLocation(ID, "numSprites"), numOfSprites[i]);
+            glUniform1i(glGetUniformLocation(ID, "spriteStep"), spriteStep);
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, textures[i]);
@@ -231,6 +284,14 @@ int main()
             deltaPos[i][0] += velocity[i][0];
             deltaPos[i][1] += velocity[i][1];
             deltaPos[i][2] += velocity[i][2];
+        }
+        if(
+            std::chrono::duration_cast<std::chrono::duration<float>>(
+                std::chrono::system_clock::now() - time
+            ).count() >= 0.1
+        ){
+            spriteStep += 1;
+            time = std::chrono::system_clock::now();
         }
 
         glfwSwapBuffers(window);
@@ -245,10 +306,43 @@ int main()
     return 0;
 }
 
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
+    }
+    else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
+        if (last_movement_direction != 'w'){
+            last_movement_direction = 'w';
+            imgpatharray[3] = movement_images[0];
+            load_images(ID);
+        }
+        deltaPos[3][1] += movement_speed;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
+        if (last_movement_direction != 'a'){
+            last_movement_direction = 'a';
+            imgpatharray[3] = movement_images[2];
+            load_images(ID);
+        }
+        deltaPos[3][0] -= movement_speed;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+        if (last_movement_direction != 's'){
+            last_movement_direction = 's';
+            imgpatharray[3] = movement_images[1];
+            load_images(ID);
+        }
+        deltaPos[3][1] -= movement_speed;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
+        if (last_movement_direction != 'd'){
+            last_movement_direction = 'd';
+            imgpatharray[3] = movement_images[3];
+            load_images(ID);
+        }
+        deltaPos[3][0] += movement_speed;
+    }
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)

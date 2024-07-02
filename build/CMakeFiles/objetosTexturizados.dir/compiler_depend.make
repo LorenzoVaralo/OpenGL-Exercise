@@ -292,12 +292,20 @@ CMakeFiles/objetosTexturizados.dir/src/main.cpp.o: ../src/main.cpp \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/xmmintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/mmintrin.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/mm_malloc.h \
+  /usr/include/c++/11/chrono \
+  /usr/include/c++/11/ratio \
+  /usr/include/c++/11/ctime \
+  /usr/include/c++/11/bits/parse_numbers.h \
   /usr/include/c++/11/iostream \
   /usr/include/c++/11/istream \
   /usr/include/c++/11/bits/istream.tcc
 
 
 /usr/include/c++/11/istream:
+
+/usr/include/c++/11/bits/parse_numbers.h:
+
+/usr/include/c++/11/ratio:
 
 /usr/lib/gcc/x86_64-linux-gnu/11/include/xmmintrin.h:
 
@@ -489,6 +497,8 @@ CMakeFiles/objetosTexturizados.dir/src/main.cpp.o: ../src/main.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:
 
+/usr/include/c++/11/ctime:
+
 /usr/include/x86_64-linux-gnu/bits/time64.h:
 
 /usr/include/c++/11/iosfwd:
@@ -632,6 +642,8 @@ CMakeFiles/objetosTexturizados.dir/src/main.cpp.o: ../src/main.cpp \
 /usr/lib/gcc/x86_64-linux-gnu/11/include/mmintrin.h:
 
 ../src/main.cpp:
+
+/usr/include/c++/11/chrono:
 
 ../src/glad.c:
 
