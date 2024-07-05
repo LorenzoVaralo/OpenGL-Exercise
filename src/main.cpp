@@ -6,30 +6,39 @@
 #include "./stb_image.h"
 #include <chrono>
 #include <iostream>
+#define NUM_ELEMENTS 7
+#define MAIN_CHARACTER_INDEX 6
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window, unsigned int ID, float movement_speed);
-unsigned int textures[4];
+
+
+unsigned int textures[NUM_ELEMENTS];
 
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-std::string imgpatharray[] = { 
-    "../field.png", 
-    "../imgs/1/D_Walk.png",
-    "../imgs/2/D_Walk.png",
-    "../imgs/4/D_Walk.png"
+std::string projectRoot = PROJECT_ROOT;
+
+std::string imgpatharray[NUM_ELEMENTS] = { 
+    projectRoot + "/imgs/scene/background.png",
+    projectRoot + "/imgs/scene/field5.png", 
+    projectRoot + "/imgs/scene/grass_side.png", 
+    projectRoot + "/imgs/scene/grass_side.png", 
+    projectRoot + "/imgs/1/D_Walk.png",
+    projectRoot + "/imgs/2/D_Walk.png",
+    projectRoot + "/imgs/4/D_Walk.png"
 };
 
 std::string movement_images[] = { 
-    "../imgs/4/U_Walk.png",
-    "../imgs/4/D_Walk.png",
-    "../imgs/4/Left_Walk.png",
-    "../imgs/4/Right_Walk.png"
+    projectRoot + "/imgs/4/U_Walk.png",
+    projectRoot + "/imgs/4/D_Walk.png",
+    projectRoot + "/imgs/4/Left_Walk.png",
+    projectRoot + "/imgs/4/Right_Walk.png"
 };
 
-GLfloat deltaPos[4][3];
+GLfloat deltaPos[NUM_ELEMENTS][3];
 char last_movement_direction = 'w';
 
 void checkCompileErrors(unsigned int shader, std::string type){
@@ -56,8 +65,7 @@ void checkCompileErrors(unsigned int shader, std::string type){
 }
 
 void load_images(unsigned int ID){
-    int num_of_images = 4;
-    for(int i = 0; i < num_of_images; i++){
+    for(int i = 0; i < NUM_ELEMENTS; i++){
 
 
         glGenTextures(1, &textures[i]);
@@ -97,6 +105,7 @@ void load_images(unsigned int ID){
 }
 int main()
 {
+    std::cout<<PROJECT_ROOT<<std::endl;
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -175,25 +184,40 @@ int main()
 
     float vertices[] = {
         // positions          // texture coords
-         1.0f,  1.0f, 0.0f,   1.0f, 1.0f, // top right
-         1.0f, -1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-        -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, // bottom left
-        -1.0f,  1.0f, 0.0f,   0.0f, 1.0f, // top left 
+         1.0f,  1.0f, 1.0f,   1.0f, 1.0f, // top right
+         1.0f, -1.0f, 1.0f,   1.0f, 0.0f, // bottom right
+        -1.0f, -1.0f, 1.0f,   0.0f, 0.0f, // bottom left
+        -1.0f,  1.0f, 1.0f,   0.0f, 1.0f, // top left 
+        
+         0.0f,  0.4f, 1.0f,   1.0f, 1.0f,
+         0.8f,  0.0f, 1.0f,   1.0f, 0.0f,
+         0.0f, -0.4f, 1.0f,   0.0f, 0.0f,
+        -0.8f,  0.0f, 1.0f,   0.0f, 1.0f,
+        
+         0.0f, -0.4f, 1.0f,   1.0f, 1.0f,
+         0.0f, -0.6f, 1.0f,   1.0f, 0.0f,
+        -0.8f, -0.2f, 1.0f,   0.0f, 0.0f,
+        -0.8f,  0.0f, 1.0f,   0.0f, 1.0f,
 
-         0.0f, -0.5f, 0.0f,   1.0f, 1.0f,
-         0.0f, -0.8f, 0.0f,   1.0f, 0.0f,
-        -0.3f, -0.8f, 0.0f,   0.0f, 0.0f,
-        -0.3f, -0.5f, 0.0f,   0.0f, 1.0f,
+         0.8f,  0.0f, 1.0f,   1.0f, 1.0f,
+         0.8f, -0.2f, 1.0f,   1.0f, 0.0f,
+         0.0f, -0.6f, 1.0f,   0.0f, 0.0f,
+         0.0f, -0.4f, 1.0f,   0.0f, 1.0f,
 
-         0.0f, -0.3f, 0.0f,   1.0f, 1.0f,
-         0.0f, -0.8f, 0.0f,   1.0f, 0.0f,
-        -0.2f, -0.8f, 0.0f,   0.0f, 0.0f,
-        -0.2f, -0.3f, 0.0f,   0.0f, 1.0f,
+         0.0f, -0.5f, 1.0f,   1.0f, 1.0f,
+         0.0f, -0.8f, 1.0f,   1.0f, 0.0f,
+        -0.3f, -0.8f, 1.0f,   0.0f, 0.0f,
+        -0.3f, -0.5f, 1.0f,   0.0f, 1.0f,
 
-        -0.1f, -0.1f, 0.0f,   1.0f, 1.0f,
-        -0.1f, -0.4f, 0.0f,   1.0f, 0.0f,
-        -0.3f, -0.4f, 0.0f,   0.0f, 0.0f,
-        -0.3f, -0.1f, 0.0f,   0.0f, 1.0f 
+         0.0f, -0.3f, 1.0f,   1.0f, 1.0f,
+         0.0f, -0.8f, 1.0f,   1.0f, 0.0f,
+        -0.2f, -0.8f, 1.0f,   0.0f, 0.0f,
+        -0.2f, -0.3f, 1.0f,   0.0f, 1.0f,
+
+        -0.1f, -0.1f, 1.0f,   1.0f, 1.0f,
+        -0.1f, -0.4f, 1.0f,   1.0f, 0.0f,
+        -0.3f, -0.4f, 1.0f,   0.0f, 0.0f,
+        -0.3f, -0.1f, 1.0f,   0.0f, 1.0f 
     };
     unsigned int indices[] = {
         0, 1, 3,
@@ -206,7 +230,16 @@ int main()
         9, 10, 11,
 
         12, 13, 15,
-        13, 14, 15
+        13, 14, 15,
+
+        16, 17, 19,
+        17, 18, 19,
+
+        20, 21, 23,
+        21, 22, 23,
+
+        24, 25, 27,
+        25, 26, 27
     };
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
@@ -230,25 +263,25 @@ int main()
     glEnableVertexAttribArray(1);
 
 
-    
-    int numOfSprites[] = {
+    int numOfSprites[NUM_ELEMENTS] = {
+        1,
+        1,
+        1,
         1,
         6,
         6,
         6
     };
 
-    int num_of_images = sizeof(imgpatharray)/sizeof(imgpatharray[0]);
-
-    GLfloat velocity[][3] = {
+    GLfloat velocity[NUM_ELEMENTS][3] = {
+        {0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f},
         {0.0f, 0.0f, 0.0f},
         {0.001f, 0.001f, 0.0f},
         {0.002f, 0.002f, 0.0f},
         {0.0f, 0.0f, 0.0f},
     };
-
-
-
 
     load_images(ID);
 
@@ -268,7 +301,7 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        for(int i = 0; i < num_of_images; i++){
+        for(int i = 0; i < NUM_ELEMENTS; i++){
             // bind textures on corresponding texture units
             glUseProgram(ID); 
             glUniform3fv(glGetUniformLocation(ID, "deltaPos"), 1, &deltaPos[i][0]);
@@ -314,34 +347,34 @@ void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
     else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
         if (last_movement_direction != 'w'){
             last_movement_direction = 'w';
-            imgpatharray[3] = movement_images[0];
+            imgpatharray[MAIN_CHARACTER_INDEX] = movement_images[0];
             load_images(ID);
         }
-        deltaPos[3][1] += movement_speed;
+        deltaPos[MAIN_CHARACTER_INDEX][1] += movement_speed;
     }
     else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
         if (last_movement_direction != 'a'){
             last_movement_direction = 'a';
-            imgpatharray[3] = movement_images[2];
+            imgpatharray[MAIN_CHARACTER_INDEX] = movement_images[2];
             load_images(ID);
         }
-        deltaPos[3][0] -= movement_speed;
+        deltaPos[MAIN_CHARACTER_INDEX][0] -= movement_speed;
     }
     else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
         if (last_movement_direction != 's'){
             last_movement_direction = 's';
-            imgpatharray[3] = movement_images[1];
+            imgpatharray[MAIN_CHARACTER_INDEX] = movement_images[1];
             load_images(ID);
         }
-        deltaPos[3][1] -= movement_speed;
+        deltaPos[MAIN_CHARACTER_INDEX][1] -= movement_speed;
     }
     else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
         if (last_movement_direction != 'd'){
             last_movement_direction = 'd';
-            imgpatharray[3] = movement_images[3];
+            imgpatharray[MAIN_CHARACTER_INDEX] = movement_images[3];
             load_images(ID);
         }
-        deltaPos[3][0] += movement_speed;
+        deltaPos[MAIN_CHARACTER_INDEX][0] += movement_speed;
     }
 }
 

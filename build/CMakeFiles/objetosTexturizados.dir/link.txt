@@ -1,1 +1,0 @@
-/usr/bin/c++ -g -rdynamic CMakeFiles/objetosTexturizados.dir/src/main.cpp.o CMakeFiles/objetosTexturizados.dir/src/glad.c.o -o objetosTexturizados  -lglfw -lSOIL /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libOpenGL.so 
