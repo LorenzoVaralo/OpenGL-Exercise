@@ -23,6 +23,5 @@ add_executable(objetosTexturizados
 
 target_link_libraries(objetosTexturizados 
     glfw
-    SOIL
     OpenGL::GL
 )
