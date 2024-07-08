@@ -6,8 +6,8 @@
 #include "./stb_image.h"
 #include <chrono>
 #include <iostream>
-#define NUM_ELEMENTS 7
-#define MAIN_CHARACTER_INDEX 6
+#define NUM_ELEMENTS 2
+#define MAIN_CHARACTER_INDEX 1
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -22,13 +22,8 @@ const unsigned int SCR_HEIGHT = 600;
 std::string projectRoot = PROJECT_ROOT;
 
 std::string imgpatharray[NUM_ELEMENTS] = { 
-    projectRoot + "/imgs/scene/background.png",
-    projectRoot + "/imgs/scene/field5.png", 
-    projectRoot + "/imgs/scene/grass_side.png", 
-    projectRoot + "/imgs/scene/grass_side.png", 
-    projectRoot + "/imgs/1/D_Walk.png",
-    projectRoot + "/imgs/2/D_Walk.png",
-    projectRoot + "/imgs/4/D_Walk.png"
+    projectRoot + "/imgs/tilemap.png", 
+    projectRoot + "/imgs/beeSprites.png"
 };
 
 std::string movement_images[] = { 
@@ -105,7 +100,6 @@ void load_images(unsigned int ID){
 }
 int main()
 {
-    std::cout<<PROJECT_ROOT<<std::endl;
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -184,62 +178,27 @@ int main()
 
     float vertices[] = {
         // positions          // texture coords
-         1.0f,  1.0f, 1.0f,   1.0f, 1.0f, // top right
-         1.0f, -1.0f, 1.0f,   1.0f, 0.0f, // bottom right
-        -1.0f, -1.0f, 1.0f,   0.0f, 0.0f, // bottom left
-        -1.0f,  1.0f, 1.0f,   0.0f, 1.0f, // top left 
+        //  0.0f,  0.4f, 1.0f,   1.0f, 1.0f,
+        //  0.8f,  0.0f, 1.0f,   1.0f, 0.0f,
+        //  0.0f, -0.4f, 1.0f,   0.0f, 0.0f,
+        // -0.8f,  0.0f, 1.0f,   0.0f, 1.0f,
+        //
+        1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+        1.0f,-1.0f, 1.0f, 1.0f, 0.0f,
+       -1.0f,-1.0f, 1.0f, 0.0f, 0.0f,
+       -1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
         
-         0.0f,  0.4f, 1.0f,   1.0f, 1.0f,
-         0.8f,  0.0f, 1.0f,   1.0f, 0.0f,
-         0.0f, -0.4f, 1.0f,   0.0f, 0.0f,
-        -0.8f,  0.0f, 1.0f,   0.0f, 1.0f,
-        
-         0.0f, -0.4f, 1.0f,   1.0f, 1.0f,
-         0.0f, -0.6f, 1.0f,   1.0f, 0.0f,
-        -0.8f, -0.2f, 1.0f,   0.0f, 0.0f,
-        -0.8f,  0.0f, 1.0f,   0.0f, 1.0f,
-
-         0.8f,  0.0f, 1.0f,   1.0f, 1.0f,
-         0.8f, -0.2f, 1.0f,   1.0f, 0.0f,
-         0.0f, -0.6f, 1.0f,   0.0f, 0.0f,
-         0.0f, -0.4f, 1.0f,   0.0f, 1.0f,
-
-         0.0f, -0.5f, 1.0f,   1.0f, 1.0f,
-         0.0f, -0.8f, 1.0f,   1.0f, 0.0f,
-        -0.3f, -0.8f, 1.0f,   0.0f, 0.0f,
-        -0.3f, -0.5f, 1.0f,   0.0f, 1.0f,
-
-         0.0f, -0.3f, 1.0f,   1.0f, 1.0f,
-         0.0f, -0.8f, 1.0f,   1.0f, 0.0f,
-        -0.2f, -0.8f, 1.0f,   0.0f, 0.0f,
-        -0.2f, -0.3f, 1.0f,   0.0f, 1.0f,
-
         -0.1f, -0.1f, 1.0f,   1.0f, 1.0f,
         -0.1f, -0.4f, 1.0f,   1.0f, 0.0f,
         -0.3f, -0.4f, 1.0f,   0.0f, 0.0f,
         -0.3f, -0.1f, 1.0f,   0.0f, 1.0f 
     };
     unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3,
+        0, 1, 2,
+        0, 2, 3,
 
         4, 5, 7,
-        5, 6, 7,
-
-        8,  9, 11,
-        9, 10, 11,
-
-        12, 13, 15,
-        13, 14, 15,
-
-        16, 17, 19,
-        17, 18, 19,
-
-        20, 21, 23,
-        21, 22, 23,
-
-        24, 25, 27,
-        25, 26, 27
+        5, 6, 7
     };
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
@@ -265,22 +224,12 @@ int main()
 
     int numOfSprites[NUM_ELEMENTS] = {
         1,
-        1,
-        1,
-        1,
-        6,
-        6,
         6
     };
 
     GLfloat velocity[NUM_ELEMENTS][3] = {
         {0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
-        {0.001f, 0.001f, 0.0f},
-        {0.002f, 0.002f, 0.0f},
-        {0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f}
     };
 
     load_images(ID);
