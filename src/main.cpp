@@ -142,9 +142,20 @@ int main()
         "\n"
         "void main()\n"
         "{\n"
+        "	float angle = radians(45.0);\n"
+        "	mat4 rotationMatrix = mat4(\n"
+        "		cos(angle),  0.5 *-sin(angle), 0.0, 0.0,\n"
+        "		sin(angle),  0.5 * cos(angle), 0.0, 0.0,\n"
+        "		0.0,         0.0,        1.0, 0.0,\n"
+        "		0.0,         0.0,        0.0, 1.0\n"
+        "	);\n"
         "	float fSpriteStep = float(spriteStep);\n"
         "	float fActionStep = float(actionStep);\n"
-        "	gl_Position = vec4(aPos.x + deltaPos.x, aPos.y + deltaPos.y, aPos.z + deltaPos.z, 1.0);\n"
+        "	if (aPos.z == -1.0){\n"
+        "		gl_Position = vec4(aPos.x + deltaPos.x, aPos.y + deltaPos.y, 1.0, 1.0);\n"
+        "	} else {\n"
+        "		gl_Position = rotationMatrix * vec4(aPos.x, aPos.y, 1.0, 1.0);\n"
+        "	}\n"
         "	TexCoord = vec2((aTexCoord.x + fSpriteStep)/numSprites, (aTexCoord.y + fActionStep)/numActions);\n"
         "}\n";
 
@@ -185,20 +196,24 @@ int main()
         // bottom rig
         // bottom lef
         // top left 
-         0.0f,  0.4f, 1.0f,   1.0f, 1.0f,
-         0.8f,  0.0f, 1.0f,   1.0f, 0.0f,
-         0.0f, -0.4f, 1.0f,   0.0f, 0.0f,
-        -0.8f,  0.0f, 1.0f,   0.0f, 1.0f,
+        //  0.0f,  0.4f, 1.0f,   1.0f, 1.0f,
+        //  0.8f,  0.0f, 1.0f,   1.0f, 0.0f,
+        //  0.0f, -0.4f, 1.0f,   0.0f, 0.0f,
+        // -0.8f,  0.0f, 1.0f,   0.0f, 1.0f,
+         0.5f,  0.5f, 0.0f,   0.4f, 1.0f,
+         0.5f, -0.5f, 0.0f,   0.4f, 0.0f,
+        -0.5f, -0.5f, 0.0f,   0.2f, 0.0f,
+        -0.5f,  0.5f, 0.0f,   0.2f, 1.0f,
         //
         //  1.0f,  1.0f, 1.0f,   1.0f, 1.0f,
         //  1.0f, -1.0f, 1.0f,   1.0f, 0.0f,
         // -1.0f, -1.0f, 1.0f,   0.0f, 0.0f,
         // -1.0f,  1.0f, 1.0f,   0.0f, 1.0f,
 
-        -0.1f, -0.1f, 1.0f,   1.0f, 1.0f,
-        -0.1f, -0.4f, 1.0f,   1.0f, 0.0f,
-        -0.3f, -0.4f, 1.0f,   0.0f, 0.0f,
-        -0.3f, -0.1f, 1.0f,   0.0f, 1.0f 
+        -0.1f, -0.1f, -1.0f,   1.0f, 1.0f,
+        -0.1f, -0.4f, -1.0f,   1.0f, 0.0f,
+        -0.3f, -0.4f, -1.0f,   0.0f, 0.0f,
+        -0.3f, -0.1f, -1.0f,   0.0f, 1.0f 
     };
     unsigned int indices[] = {
         0, 1, 3,
