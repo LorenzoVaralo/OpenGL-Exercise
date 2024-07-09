@@ -22,7 +22,7 @@ const unsigned int SCR_HEIGHT = 600;
 std::string projectRoot = PROJECT_ROOT;
 
 std::string imgpatharray[NUM_ELEMENTS] = { 
-    projectRoot + "/imgs/tilemap.png", 
+    projectRoot + "/imgs/tilemap2.png", 
     projectRoot + "/imgs/beeSprites.png"
 };
 
@@ -137,12 +137,15 @@ int main()
         "uniform vec3 deltaPos;\n"
         "uniform int numSprites;\n"
         "uniform int spriteStep;\n"
+        "uniform int numActions;\n"
+        "uniform int actionStep;\n"
         "\n"
         "void main()\n"
         "{\n"
         "	float fSpriteStep = float(spriteStep);\n"
+        "	float fActionStep = float(actionStep);\n"
         "	gl_Position = vec4(aPos.x + deltaPos.x, aPos.y + deltaPos.y, aPos.z + deltaPos.z, 1.0);\n"
-        "	TexCoord = vec2((aTexCoord.x + fSpriteStep)/numSprites, aTexCoord.y);\n"
+        "	TexCoord = vec2((aTexCoord.x + fSpriteStep)/numSprites, (aTexCoord.y + fActionStep)/numActions);\n"
         "}\n";
 
     const char * fShaderCode = 
@@ -178,24 +181,28 @@ int main()
 
     float vertices[] = {
         // positions          // texture coords
-        //  0.0f,  0.4f, 1.0f,   1.0f, 1.0f,
-        //  0.8f,  0.0f, 1.0f,   1.0f, 0.0f,
-        //  0.0f, -0.4f, 1.0f,   0.0f, 0.0f,
-        // -0.8f,  0.0f, 1.0f,   0.0f, 1.0f,
+        // top right
+        // bottom rig
+        // bottom lef
+        // top left 
+         0.0f,  0.4f, 1.0f,   1.0f, 1.0f,
+         0.8f,  0.0f, 1.0f,   1.0f, 0.0f,
+         0.0f, -0.4f, 1.0f,   0.0f, 0.0f,
+        -0.8f,  0.0f, 1.0f,   0.0f, 1.0f,
         //
-        1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-        1.0f,-1.0f, 1.0f, 1.0f, 0.0f,
-       -1.0f,-1.0f, 1.0f, 0.0f, 0.0f,
-       -1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-        
+        //  1.0f,  1.0f, 1.0f,   1.0f, 1.0f,
+        //  1.0f, -1.0f, 1.0f,   1.0f, 0.0f,
+        // -1.0f, -1.0f, 1.0f,   0.0f, 0.0f,
+        // -1.0f,  1.0f, 1.0f,   0.0f, 1.0f,
+
         -0.1f, -0.1f, 1.0f,   1.0f, 1.0f,
         -0.1f, -0.4f, 1.0f,   1.0f, 0.0f,
         -0.3f, -0.4f, 1.0f,   0.0f, 0.0f,
         -0.3f, -0.1f, 1.0f,   0.0f, 1.0f 
     };
     unsigned int indices[] = {
-        0, 1, 2,
-        0, 2, 3,
+        0, 1, 3,
+        1, 2, 3,
 
         4, 5, 7,
         5, 6, 7
@@ -227,12 +234,18 @@ int main()
         6
     };
 
+    int numOfActions[NUM_ELEMENTS] = {
+        1,
+        4
+    };
+
     GLfloat velocity[NUM_ELEMENTS][3] = {
         {0.0f, 0.0f, 0.0f},
         {0.0f, 0.0f, 0.0f}
     };
 
     load_images(ID);
+    glUniform1i(glGetUniformLocation(ID, "actionStep"), 0);
 
     // render loop
     // -----------
@@ -256,6 +269,7 @@ int main()
             glUniform3fv(glGetUniformLocation(ID, "deltaPos"), 1, &deltaPos[i][0]);
             glUniform1i(glGetUniformLocation(ID, "numSprites"), numOfSprites[i]);
             glUniform1i(glGetUniformLocation(ID, "spriteStep"), spriteStep);
+            glUniform1i(glGetUniformLocation(ID, "numActions"), numOfActions[i]);
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, textures[i]);
@@ -296,32 +310,28 @@ void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
     else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
         if (last_movement_direction != 'w'){
             last_movement_direction = 'w';
-            imgpatharray[MAIN_CHARACTER_INDEX] = movement_images[0];
-            load_images(ID);
+            glUniform1i(glGetUniformLocation(ID, "actionStep"), 3);
         }
         deltaPos[MAIN_CHARACTER_INDEX][1] += movement_speed;
     }
     else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
         if (last_movement_direction != 'a'){
             last_movement_direction = 'a';
-            imgpatharray[MAIN_CHARACTER_INDEX] = movement_images[2];
-            load_images(ID);
+            glUniform1i(glGetUniformLocation(ID, "actionStep"), 1);
         }
         deltaPos[MAIN_CHARACTER_INDEX][0] -= movement_speed;
     }
     else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
         if (last_movement_direction != 's'){
             last_movement_direction = 's';
-            imgpatharray[MAIN_CHARACTER_INDEX] = movement_images[1];
-            load_images(ID);
+            glUniform1i(glGetUniformLocation(ID, "actionStep"), 2);
         }
         deltaPos[MAIN_CHARACTER_INDEX][1] -= movement_speed;
     }
     else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
         if (last_movement_direction != 'd'){
             last_movement_direction = 'd';
-            imgpatharray[MAIN_CHARACTER_INDEX] = movement_images[3];
-            load_images(ID);
+            glUniform1i(glGetUniformLocation(ID, "actionStep"), 0);
         }
         deltaPos[MAIN_CHARACTER_INDEX][0] += movement_speed;
     }
