@@ -7,8 +7,8 @@
 #include "./stb_image.h"
 #include <chrono>
 #include <iostream>
-#define NUM_ELEMENTS 2
-#define MAIN_CHARACTER_INDEX 1
+#define NUM_ELEMENTS 10
+#define MAIN_CHARACTER_INDEX 9
 #define NUM_DIFFERENT_TILES 5
 
 
@@ -25,7 +25,16 @@ std::string projectRoot = PROJECT_ROOT;
 
 std::string imgpatharray[NUM_ELEMENTS] = { 
     projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/beeSprites.png"
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png",
+    projectRoot + "/imgs/beeSprites.png",
+
 };
 
 
@@ -139,19 +148,6 @@ std::vector<float> generateVertices(std::vector<float> &tilemap, int rows, int c
 }
 int main()
 {
-    int tile_max_rows = 3;
-    int tile_max_cols = 3;
-
-    std::vector<float> aaa = {0.0, 1.0 , 2.0, 2.0, 0.0, 1.0, 1.0, 2.0, 0.0};
-    std::vector<float> resultado = generateVertices(aaa, 3, 3);
-
-    float* vertices = &resultado[0];
-     for(int tr = 0; tr<8; tr++){
-         for(int tc = 0; tc<5; tc++){
-             std::cout<<vertices[5*tr + tc]<<", ";
-         }
-         std::cout<<std::endl;
-     }
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -243,40 +239,28 @@ int main()
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
-    // float vertices[] = {
-    //     // positions          // texture coords
-    //     // top right
-    //     // bottom rig
-    //     // bottom lef
-    //     // top left 
-    //     //  0.0f,  0.4f, 1.0f,   1.0f, 1.0f,
-    //     //  0.8f,  0.0f, 1.0f,   1.0f, 0.0f,
-    //     //  0.0f, -0.4f, 1.0f,   0.0f, 0.0f,
-    //     // -0.8f,  0.0f, 1.0f,   0.0f, 1.0f,
-    //       1.0f,  1.0f, 0.0f,   0.4f, 1.0f,
-    //       1.0f, -1.0f, 0.0f,   0.4f, 0.0f,
-    //      -1.0f, -1.0f, 0.0f,   0.2f, 0.0f,
-    //      -1.0f,  1.0f, 0.0f,   0.2f, 1.0f,
-    //     //
-    //     //  1.0f,  1.0f, 1.0f,   1.0f, 1.0f,
-    //     //  1.0f, -1.0f, 1.0f,   1.0f, 0.0f,
-    //     // -1.0f, -1.0f, 1.0f,   0.0f, 0.0f,
-    //     // -1.0f,  1.0f, 1.0f,   0.0f, 1.0f,
-    //
-    //     -0.1f, -0.1f, -1.0f,   1.0f, 1.0f,
-    //     -0.1f, -0.4f, -1.0f,   1.0f, 0.0f,
-    //     -0.3f, -0.4f, -1.0f,   0.0f, 0.0f,
-    //     -0.3f, -0.1f, -1.0f,   0.0f, 1.0f 
-    // };
+    int tile_max_rows = 3;
+    int tile_max_cols = 3;
 
-    unsigned int indices[tile_max_cols * tile_max_rows * 6];
+    std::vector<float> aaa = {0.0, 1.0 , 2.0, 2.0, 0.0, 1.0, 1.0, 2.0, 0.0};
+    std::vector<float> vertices = generateVertices(aaa, 3, 3);
+
+    std::vector<float> mainCharacterVertices = {
+        -0.1f, -0.1f, -1.0f,   1.0f, 1.0f,
+        -0.1f, -0.4f, -1.0f,   1.0f, 0.0f,
+        -0.3f, -0.4f, -1.0f,   0.0f, 0.0f,
+        -0.3f, -0.1f, -1.0f,   0.0f, 1.0f 
+    };
+    vertices.insert(vertices.end(), mainCharacterVertices.begin(), mainCharacterVertices.end());
+
+    unsigned int indices[NUM_ELEMENTS * 6];
     int ind_pos = 0;
-    for (int rect = 0; rect < (tile_max_cols * tile_max_rows); rect++) {
+    for (int rect = 0; rect < (NUM_ELEMENTS); rect++) {
         int base_vertex = rect*4;
         // triangulo 1:
         indices[ind_pos  ] = base_vertex;
         indices[ind_pos+1] = base_vertex+1;
-        indices[ind_pos+2] = base_vertex+2;
+        indices[ind_pos+2] = base_vertex+3;
         // triangulo 2:
         indices[ind_pos+3] = base_vertex+1;
         indices[ind_pos+4] = base_vertex+2;
@@ -284,13 +268,7 @@ int main()
         
         ind_pos += 6;
     }
-    // unsigned int indices[] = {
-    //     0, 1, 3,
-    //     1, 2, 3,
-    //
-    //     4, 5, 7,
-    //     5, 6, 7
-    // };
+
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -299,7 +277,7 @@ int main()
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(std::vector<float>),&vertices.front(),GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
@@ -315,18 +293,30 @@ int main()
 
     int numOfSprites[NUM_ELEMENTS] = {
         1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
         6
     };
 
     int numOfActions[NUM_ELEMENTS] = {
         1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
         4
     };
 
-    GLfloat velocity[NUM_ELEMENTS][3] = {
-        {0.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f}
-    };
 
     load_images(ID);
     glUniform1i(glGetUniformLocation(ID, "actionStep"), 0);
@@ -361,9 +351,6 @@ int main()
             // render container
             glBindVertexArray(VAO);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(i * 6 * sizeof(unsigned int)));
-            deltaPos[i][0] += velocity[i][0];
-            deltaPos[i][1] += velocity[i][1];
-            deltaPos[i][2] += velocity[i][2];
         }
         if(
             std::chrono::duration_cast<std::chrono::duration<float>>(
