@@ -2,12 +2,14 @@
 #include <GLFW/glfw3.h>
 #include <cstdio>
 #include <ostream>
+#include <vector>
 #define STB_IMAGE_IMPLEMENTATION
 #include "./stb_image.h"
 #include <chrono>
 #include <iostream>
 #define NUM_ELEMENTS 2
 #define MAIN_CHARACTER_INDEX 1
+#define NUM_DIFFERENT_TILES 5
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -26,12 +28,6 @@ std::string imgpatharray[NUM_ELEMENTS] = {
     projectRoot + "/imgs/beeSprites.png"
 };
 
-std::string movement_images[] = { 
-    projectRoot + "/imgs/4/U_Walk.png",
-    projectRoot + "/imgs/4/D_Walk.png",
-    projectRoot + "/imgs/4/Left_Walk.png",
-    projectRoot + "/imgs/4/Right_Walk.png"
-};
 
 GLfloat deltaPos[NUM_ELEMENTS][3];
 char last_movement_direction = 'w';
@@ -98,8 +94,65 @@ void load_images(unsigned int ID){
     glUniform1i(glGetUniformLocation(ID, "img_texture"), 0);
 
 }
+std::vector<float> generateVertices(std::vector<float> &tilemap, int rows, int cols){
+    float float_max_rows = float(rows);
+    float float_max_cols = float(cols);
+    float tile_width = 1.0 / float(NUM_DIFFERENT_TILES);
+    std::vector<float> result;
+
+    for(int r = 0; r < rows; r++){
+        for(int c = 0; c < cols; c++){
+            float x1 = ( (2.0 * c) / float_max_cols) - 1.0;
+            float x2 = ( (2.0 * (c + 1.0)) / float_max_cols) - 1.0;
+            float y1 = ((-2.0 * r) / float_max_rows) + 1.0;
+            float y2 = ((-2.0 * (r + 1.0)) / float_max_rows) + 1.0;
+            float tileID = tilemap[cols*r + c];
+            float tile_min_x = tile_width * tileID;
+            float tile_max_x = tile_min_x + tile_width;
+            // top right
+            // bottom rig
+            // bottom lef
+            // top left 
+            std::vector<float> tileVertices = {
+                x2, y1, 0.0,  tile_max_x, 1.0,
+                x2, y2, 0.0,  tile_max_x, 0.0,
+                x1, y2, 0.0,  tile_min_x, 0.0,
+                x1, y1, 0.0,  tile_min_x, 1.0
+            };
+
+            // std::cout<<x2<<", "<<y1<<",   "<<tile_max_x<<", "<<1.0<<std::endl;
+            // std::cout<<x2<<", "<<y2<<",   "<<tile_max_x<<", "<<0.0<<std::endl;
+            // std::cout<<x1<<", "<<y2<<",   "<<tile_min_x<<", "<<0.0<<std::endl;
+            // std::cout<<x1<<", "<<y1<<",   "<<tile_min_x<<", "<<1.0<<std::endl;
+            // std::cout<<std::endl;
+
+            result.insert(result.end(), tileVertices.begin(), tileVertices.end());
+        }
+    }
+    return result;
+    // for(int tr = 0; tr<8; tr++){
+    //     for(int tc = 0; tc<5; tc++){
+    //         std::cout<<result[5*tr + tc]<<", ";
+    //     }
+    //     std::cout<<std::endl;
+    // }
+}
 int main()
 {
+    int tile_max_rows = 3;
+    int tile_max_cols = 3;
+
+    std::vector<float> aaa = {0.0, 1.0 , 2.0, 2.0, 0.0, 1.0, 1.0, 2.0, 0.0};
+    std::vector<float> resultado = generateVertices(aaa, 3, 3);
+
+    float* vertices = &resultado[0];
+     for(int tr = 0; tr<8; tr++){
+         for(int tc = 0; tc<5; tc++){
+             std::cout<<vertices[5*tr + tc]<<", ";
+         }
+         std::cout<<std::endl;
+     }
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -144,8 +197,8 @@ int main()
         "{\n"
         "	float angle = radians(45.0);\n"
         "	mat4 rotationMatrix = mat4(\n"
-        "		cos(angle),  0.5 *-sin(angle), 0.0, 0.0,\n"
-        "		sin(angle),  0.5 * cos(angle), 0.0, 0.0,\n"
+        "		0.7 * cos(angle),  0.4 *-sin(angle), 0.0, 0.0,\n"
+        "		0.7 * sin(angle),  0.4 * cos(angle), 0.0, 0.0,\n"
         "		0.0,         0.0,        1.0, 0.0,\n"
         "		0.0,         0.0,        0.0, 1.0\n"
         "	);\n"
@@ -190,38 +243,54 @@ int main()
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
-    float vertices[] = {
-        // positions          // texture coords
-        // top right
-        // bottom rig
-        // bottom lef
-        // top left 
-        //  0.0f,  0.4f, 1.0f,   1.0f, 1.0f,
-        //  0.8f,  0.0f, 1.0f,   1.0f, 0.0f,
-        //  0.0f, -0.4f, 1.0f,   0.0f, 0.0f,
-        // -0.8f,  0.0f, 1.0f,   0.0f, 1.0f,
-         0.5f,  0.5f, 0.0f,   0.4f, 1.0f,
-         0.5f, -0.5f, 0.0f,   0.4f, 0.0f,
-        -0.5f, -0.5f, 0.0f,   0.2f, 0.0f,
-        -0.5f,  0.5f, 0.0f,   0.2f, 1.0f,
-        //
-        //  1.0f,  1.0f, 1.0f,   1.0f, 1.0f,
-        //  1.0f, -1.0f, 1.0f,   1.0f, 0.0f,
-        // -1.0f, -1.0f, 1.0f,   0.0f, 0.0f,
-        // -1.0f,  1.0f, 1.0f,   0.0f, 1.0f,
+    // float vertices[] = {
+    //     // positions          // texture coords
+    //     // top right
+    //     // bottom rig
+    //     // bottom lef
+    //     // top left 
+    //     //  0.0f,  0.4f, 1.0f,   1.0f, 1.0f,
+    //     //  0.8f,  0.0f, 1.0f,   1.0f, 0.0f,
+    //     //  0.0f, -0.4f, 1.0f,   0.0f, 0.0f,
+    //     // -0.8f,  0.0f, 1.0f,   0.0f, 1.0f,
+    //       1.0f,  1.0f, 0.0f,   0.4f, 1.0f,
+    //       1.0f, -1.0f, 0.0f,   0.4f, 0.0f,
+    //      -1.0f, -1.0f, 0.0f,   0.2f, 0.0f,
+    //      -1.0f,  1.0f, 0.0f,   0.2f, 1.0f,
+    //     //
+    //     //  1.0f,  1.0f, 1.0f,   1.0f, 1.0f,
+    //     //  1.0f, -1.0f, 1.0f,   1.0f, 0.0f,
+    //     // -1.0f, -1.0f, 1.0f,   0.0f, 0.0f,
+    //     // -1.0f,  1.0f, 1.0f,   0.0f, 1.0f,
+    //
+    //     -0.1f, -0.1f, -1.0f,   1.0f, 1.0f,
+    //     -0.1f, -0.4f, -1.0f,   1.0f, 0.0f,
+    //     -0.3f, -0.4f, -1.0f,   0.0f, 0.0f,
+    //     -0.3f, -0.1f, -1.0f,   0.0f, 1.0f 
+    // };
 
-        -0.1f, -0.1f, -1.0f,   1.0f, 1.0f,
-        -0.1f, -0.4f, -1.0f,   1.0f, 0.0f,
-        -0.3f, -0.4f, -1.0f,   0.0f, 0.0f,
-        -0.3f, -0.1f, -1.0f,   0.0f, 1.0f 
-    };
-    unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3,
-
-        4, 5, 7,
-        5, 6, 7
-    };
+    unsigned int indices[tile_max_cols * tile_max_rows * 6];
+    int ind_pos = 0;
+    for (int rect = 0; rect < (tile_max_cols * tile_max_rows); rect++) {
+        int base_vertex = rect*4;
+        // triangulo 1:
+        indices[ind_pos  ] = base_vertex;
+        indices[ind_pos+1] = base_vertex+1;
+        indices[ind_pos+2] = base_vertex+2;
+        // triangulo 2:
+        indices[ind_pos+3] = base_vertex+1;
+        indices[ind_pos+4] = base_vertex+2;
+        indices[ind_pos+5] = base_vertex+3;
+        
+        ind_pos += 6;
+    }
+    // unsigned int indices[] = {
+    //     0, 1, 3,
+    //     1, 2, 3,
+    //
+    //     4, 5, 7,
+    //     5, 6, 7
+    // };
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
