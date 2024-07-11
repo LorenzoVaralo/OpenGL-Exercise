@@ -1,17 +1,20 @@
 #include "./glad.h"
 #include <GLFW/glfw3.h>
 #include <cstdio>
+#include <cmath>
+#include <exception>
 #include <ostream>
 #include <vector>
 #define STB_IMAGE_IMPLEMENTATION
 #include "./stb_image.h"
 #include <chrono>
 #include <iostream>
-#define NUM_ELEMENTS 10
-#define MAIN_CHARACTER_INDEX 9
+#define NUM_ELEMENTS 17
+#define MAIN_CHARACTER_INDEX 16
 #define NUM_DIFFERENT_TILES 5
 
 
+float sin45 = 0.7071f;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window, unsigned int ID, float movement_speed);
 
@@ -23,7 +26,20 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 std::string projectRoot = PROJECT_ROOT;
 
+std::vector<int> walkableMatrix = {
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    1, 0, 0, 0,
+    0, 0, 0, 1
+};
 std::string imgpatharray[NUM_ELEMENTS] = { 
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png", 
+    projectRoot + "/imgs/tilemap2.png", 
     projectRoot + "/imgs/tilemap2.png", 
     projectRoot + "/imgs/tilemap2.png", 
     projectRoot + "/imgs/tilemap2.png", 
@@ -239,11 +255,14 @@ int main()
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
-    int tile_max_rows = 3;
-    int tile_max_cols = 3;
 
-    std::vector<float> aaa = {0.0, 1.0 , 2.0, 2.0, 0.0, 1.0, 1.0, 2.0, 0.0};
-    std::vector<float> vertices = generateVertices(aaa, 3, 3);
+    std::vector<float> aaa = {
+        0.0, 1.0, 2.0, 4.0,
+        4.0, 0.0, 1.0, 2.0,
+        1.0, 3.0, 4.0, 2.0,
+        2.0, 0.0, 2.0, 1.0
+    };
+    std::vector<float> vertices = generateVertices(aaa, 4, 4);
 
     std::vector<float> mainCharacterVertices = {
         -0.1f, -0.1f, -1.0f,   1.0f, 1.0f,
@@ -301,10 +320,24 @@ int main()
         1,
         1,
         1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
         6
     };
 
     int numOfActions[NUM_ELEMENTS] = {
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
         1,
         1,
         1,
@@ -358,6 +391,7 @@ int main()
             ).count() >= 0.1
         ){
             spriteStep += 1;
+
             time = std::chrono::system_clock::now();
         }
 
@@ -375,6 +409,12 @@ int main()
 
 void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
 {
+    float x = (-0.2f+deltaPos[MAIN_CHARACTER_INDEX][0])/0.7f; 
+    float y = (-0.25f+deltaPos[MAIN_CHARACTER_INDEX][1])/0.4f*-1.0f; 
+
+    int current_x_tile = int(((x* sin45) + (y* sin45) +1.0)*2.0f);
+    int current_y_tile = int(((x*-sin45) + (y* sin45) +1.0)*2.0f);
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
     }
@@ -383,28 +423,51 @@ void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
             last_movement_direction = 'w';
             glUniform1i(glGetUniformLocation(ID, "actionStep"), 3);
         }
-        deltaPos[MAIN_CHARACTER_INDEX][1] += movement_speed;
+
+        int walkableID = walkableMatrix[4 * current_y_tile + current_x_tile];
+        if(walkableID == 1){
+            deltaPos[MAIN_CHARACTER_INDEX][1] -= movement_speed;
+            std::cout<<"1"<<std::endl;
+        } else {
+            deltaPos[MAIN_CHARACTER_INDEX][1] += movement_speed;
+        }
     }
     else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
         if (last_movement_direction != 'a'){
             last_movement_direction = 'a';
             glUniform1i(glGetUniformLocation(ID, "actionStep"), 1);
         }
-        deltaPos[MAIN_CHARACTER_INDEX][0] -= movement_speed;
+
+        int walkableID = walkableMatrix[4 * current_y_tile + current_x_tile];
+        if(walkableID == 1){
+            std::cout<<"1"<<std::endl;
+        }else{
+            deltaPos[MAIN_CHARACTER_INDEX][0] -= movement_speed;
+        }
     }
     else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
         if (last_movement_direction != 's'){
             last_movement_direction = 's';
             glUniform1i(glGetUniformLocation(ID, "actionStep"), 2);
         }
-        deltaPos[MAIN_CHARACTER_INDEX][1] -= movement_speed;
+        int walkableID = walkableMatrix[4 * current_y_tile + current_x_tile];
+        if(walkableID == 1){
+            std::cout<<"1"<<std::endl;
+        } else {
+            deltaPos[MAIN_CHARACTER_INDEX][1] -= movement_speed;
+        }
     }
     else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
         if (last_movement_direction != 'd'){
             last_movement_direction = 'd';
             glUniform1i(glGetUniformLocation(ID, "actionStep"), 0);
         }
-        deltaPos[MAIN_CHARACTER_INDEX][0] += movement_speed;
+        int walkableID = walkableMatrix[4 * current_y_tile + current_x_tile];
+        if(walkableID == 1){
+            std::cout<<"1"<<std::endl;
+        }else{
+            deltaPos[MAIN_CHARACTER_INDEX][0] += movement_speed;
+        }
     }
 }
 
