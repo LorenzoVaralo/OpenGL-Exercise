@@ -100,8 +100,8 @@ std::vector<float> generateVertices(std::vector<int> &tilemap, int rows, int col
 }
 int main()
 {
-    std::ifstream tilemapFile("tilemap.txt");
-    std::ifstream walkableFile("walkable.txt");
+    std::ifstream tilemapFile(projectRoot + "/tilemap.txt");
+    std::ifstream walkableFile(projectRoot + "/walkable.txt");
 
     if (!tilemapFile) {
         std::cerr << "Unable to open tilemap file";
