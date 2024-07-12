@@ -2,19 +2,22 @@
 #include <GLFW/glfw3.h>
 #include <cstdio>
 #include <cmath>
-#include <exception>
 #include <ostream>
 #include <vector>
 #define STB_IMAGE_IMPLEMENTATION
 #include "./stb_image.h"
 #include <chrono>
 #include <iostream>
-#define NUM_ELEMENTS 17
-#define MAIN_CHARACTER_INDEX 16
+#define TILE_ROWS 16
+#define TILE_COLS 16
+#define NUM_ELEMENTS (TILE_COLS*TILE_ROWS+1)
+#define MAIN_CHARACTER_INDEX (TILE_COLS*TILE_ROWS)
 #define NUM_DIFFERENT_TILES 5
 
 
 float sin45 = 0.7071f;
+std::vector<std::string> imgpatharray;
+std::vector<int> walkableMatrix;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window, unsigned int ID, float movement_speed);
 
@@ -26,32 +29,6 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 std::string projectRoot = PROJECT_ROOT;
 
-std::vector<int> walkableMatrix = {
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    1, 0, 0, 0,
-    0, 0, 0, 1
-};
-std::string imgpatharray[NUM_ELEMENTS] = { 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png", 
-    projectRoot + "/imgs/tilemap2.png",
-    projectRoot + "/imgs/beeSprites.png",
-
-};
 
 
 GLfloat deltaPos[NUM_ELEMENTS][3];
@@ -119,7 +96,7 @@ void load_images(unsigned int ID){
     glUniform1i(glGetUniformLocation(ID, "img_texture"), 0);
 
 }
-std::vector<float> generateVertices(std::vector<float> &tilemap, int rows, int cols){
+std::vector<float> generateVertices(std::vector<int> &tilemap, int rows, int cols){
     float float_max_rows = float(rows);
     float float_max_cols = float(cols);
     float tile_width = 1.0 / float(NUM_DIFFERENT_TILES);
@@ -131,7 +108,7 @@ std::vector<float> generateVertices(std::vector<float> &tilemap, int rows, int c
             float x2 = ( (2.0 * (c + 1.0)) / float_max_cols) - 1.0;
             float y1 = ((-2.0 * r) / float_max_rows) + 1.0;
             float y2 = ((-2.0 * (r + 1.0)) / float_max_rows) + 1.0;
-            float tileID = tilemap[cols*r + c];
+            float tileID = float(tilemap[cols*r + c]);
             float tile_min_x = tile_width * tileID;
             float tile_max_x = tile_min_x + tile_width;
             // top right
@@ -165,6 +142,79 @@ std::vector<float> generateVertices(std::vector<float> &tilemap, int rows, int c
 int main()
 {
 
+    imgpatharray = { 
+        projectRoot + "/imgs/beeSprites.png",
+    };
+    // std::vector<int> aaa = {
+    //     0, 1, 2, 4, 0, 1, 2, 4,
+    //     4, 0, 1, 2, 4, 0, 1, 2,
+    //     1, 3, 4, 2, 1, 3, 4, 2,
+    //     2, 0, 2, 1, 2, 0, 2, 1,
+    //     0, 1, 2, 4, 0, 1, 2, 4,
+    //     4, 0, 1, 2, 4, 0, 1, 2,
+    //     1, 3, 4, 2, 1, 3, 4, 2,
+    //     2, 0, 2, 1, 2, 0, 2, 1,
+    // };
+    std::vector<int> aaa = {
+        0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4,
+        4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2,
+        1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2,
+        2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1,
+        0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4,
+        4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2,
+        1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2,
+        2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1,
+        0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4,
+        4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2,
+        1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2,
+        2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1,
+        0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4,
+        4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2,
+        1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2,
+        2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1,
+    };
+    std::vector<float> mainCharacterVertices = {
+        -0.1f, -0.1f, -1.0f,   1.0f, 1.0f,
+        -0.1f, -0.4f, -1.0f,   1.0f, 0.0f,
+        -0.3f, -0.4f, -1.0f,   0.0f, 0.0f,
+        -0.3f, -0.1f, -1.0f,   0.0f, 1.0f 
+    };
+    // walkableMatrix = {
+    //     0, 1, 0, 0, 0, 1, 0, 0,
+    //     0, 0, 1, 0, 0, 0, 1, 0,
+    //     1, 0, 0, 0, 1, 0, 0, 0,
+    //     0, 0, 0, 1, 0, 0, 0, 1,
+    //     0, 1, 0, 0, 0, 1, 0, 0,
+    //     0, 0, 1, 0, 0, 0, 1, 0,
+    //     1, 0, 0, 0, 0, 0, 0, 0,
+    //     0, 0, 0, 1, 0, 0, 0, 1,
+    // };
+    walkableMatrix = {
+        0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
+        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+        1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+        0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+        0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
+        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+        1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+        0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
+        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+        1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+        0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+        0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
+        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+        1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+    };
+
+    std::vector<int> numOfSprites = {6};
+    std::vector<int> numOfActions = {4};
+    for (int i=0; i < (TILE_ROWS * TILE_COLS); i++){
+        imgpatharray.insert(imgpatharray.begin(), projectRoot + "/imgs/tilemap2.png");
+        numOfSprites.insert(numOfSprites.begin(), 1);
+        numOfActions.insert(numOfActions.begin(), 1);
+    }
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -256,20 +306,8 @@ int main()
     glDeleteShader(fragment);
 
 
-    std::vector<float> aaa = {
-        0.0, 1.0, 2.0, 4.0,
-        4.0, 0.0, 1.0, 2.0,
-        1.0, 3.0, 4.0, 2.0,
-        2.0, 0.0, 2.0, 1.0
-    };
-    std::vector<float> vertices = generateVertices(aaa, 4, 4);
+    std::vector<float> vertices = generateVertices(aaa, TILE_ROWS, TILE_COLS);
 
-    std::vector<float> mainCharacterVertices = {
-        -0.1f, -0.1f, -1.0f,   1.0f, 1.0f,
-        -0.1f, -0.4f, -1.0f,   1.0f, 0.0f,
-        -0.3f, -0.4f, -1.0f,   0.0f, 0.0f,
-        -0.3f, -0.1f, -1.0f,   0.0f, 1.0f 
-    };
     vertices.insert(vertices.end(), mainCharacterVertices.begin(), mainCharacterVertices.end());
 
     unsigned int indices[NUM_ELEMENTS * 6];
@@ -296,7 +334,7 @@ int main()
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(std::vector<float>),&vertices.front(),GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),&vertices.front(),GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
@@ -308,47 +346,6 @@ int main()
     // texture coord attribute
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
-
-    int numOfSprites[NUM_ELEMENTS] = {
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        6
-    };
-
-    int numOfActions[NUM_ELEMENTS] = {
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        4
-    };
 
 
     load_images(ID);
@@ -372,18 +369,23 @@ int main()
 
         for(int i = 0; i < NUM_ELEMENTS; i++){
             // bind textures on corresponding texture units
-            glUseProgram(ID); 
-            glUniform3fv(glGetUniformLocation(ID, "deltaPos"), 1, &deltaPos[i][0]);
-            glUniform1i(glGetUniformLocation(ID, "numSprites"), numOfSprites[i]);
-            glUniform1i(glGetUniformLocation(ID, "spriteStep"), spriteStep);
-            glUniform1i(glGetUniformLocation(ID, "numActions"), numOfActions[i]);
+            if(i>0 && imgpatharray[i] == imgpatharray[i-1]){
+                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(i * 6 * sizeof(unsigned int)));
+                continue;
+            } else {
+                glUseProgram(ID); 
+                glUniform3fv(glGetUniformLocation(ID, "deltaPos"), 1, &deltaPos[i][0]);
+                glUniform1i(glGetUniformLocation(ID, "numSprites"), numOfSprites[i]);
+                glUniform1i(glGetUniformLocation(ID, "spriteStep"), spriteStep);
+                glUniform1i(glGetUniformLocation(ID, "numActions"), numOfActions[i]);
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, textures[i]);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, textures[i]);
 
-            // render container
-            glBindVertexArray(VAO);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(i * 6 * sizeof(unsigned int)));
+                // render container
+                glBindVertexArray(VAO);
+                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(i * 6 * sizeof(unsigned int)));
+            }
         }
         if(
             std::chrono::duration_cast<std::chrono::duration<float>>(
@@ -412,8 +414,8 @@ void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
     float x = (-0.2f+deltaPos[MAIN_CHARACTER_INDEX][0])/0.7f; 
     float y = (-0.25f+deltaPos[MAIN_CHARACTER_INDEX][1])/0.4f*-1.0f; 
 
-    int current_x_tile = int(((x* sin45) + (y* sin45) +1.0)*2.0f);
-    int current_y_tile = int(((x*-sin45) + (y* sin45) +1.0)*2.0f);
+    int current_x_tile = int(((x* sin45) + (y* sin45) +1.0)*TILE_COLS/2);
+    int current_y_tile = int(((x*-sin45) + (y* sin45) +1.0)*TILE_ROWS/2);
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
@@ -424,10 +426,9 @@ void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
             glUniform1i(glGetUniformLocation(ID, "actionStep"), 3);
         }
 
-        int walkableID = walkableMatrix[4 * current_y_tile + current_x_tile];
+        int walkableID = walkableMatrix[TILE_COLS * current_y_tile + current_x_tile];
         if(walkableID == 1){
-            deltaPos[MAIN_CHARACTER_INDEX][1] -= movement_speed;
-            std::cout<<"1"<<std::endl;
+            glfwSetWindowShouldClose(window, true);
         } else {
             deltaPos[MAIN_CHARACTER_INDEX][1] += movement_speed;
         }
@@ -438,9 +439,9 @@ void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
             glUniform1i(glGetUniformLocation(ID, "actionStep"), 1);
         }
 
-        int walkableID = walkableMatrix[4 * current_y_tile + current_x_tile];
+        int walkableID = walkableMatrix[TILE_COLS * current_y_tile + current_x_tile];
         if(walkableID == 1){
-            std::cout<<"1"<<std::endl;
+            glfwSetWindowShouldClose(window, true);
         }else{
             deltaPos[MAIN_CHARACTER_INDEX][0] -= movement_speed;
         }
@@ -450,9 +451,9 @@ void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
             last_movement_direction = 's';
             glUniform1i(glGetUniformLocation(ID, "actionStep"), 2);
         }
-        int walkableID = walkableMatrix[4 * current_y_tile + current_x_tile];
+        int walkableID = walkableMatrix[TILE_COLS * current_y_tile + current_x_tile];
         if(walkableID == 1){
-            std::cout<<"1"<<std::endl;
+            glfwSetWindowShouldClose(window, true);
         } else {
             deltaPos[MAIN_CHARACTER_INDEX][1] -= movement_speed;
         }
@@ -462,9 +463,9 @@ void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
             last_movement_direction = 'd';
             glUniform1i(glGetUniformLocation(ID, "actionStep"), 0);
         }
-        int walkableID = walkableMatrix[4 * current_y_tile + current_x_tile];
+        int walkableID = walkableMatrix[TILE_COLS * current_y_tile + current_x_tile];
         if(walkableID == 1){
-            std::cout<<"1"<<std::endl;
+            glfwSetWindowShouldClose(window, true);
         }else{
             deltaPos[MAIN_CHARACTER_INDEX][0] += movement_speed;
         }
