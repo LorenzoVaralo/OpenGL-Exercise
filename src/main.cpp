@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cmath>
 #include <ostream>
+#include <fstream>
 #include <vector>
 #define STB_IMAGE_IMPLEMENTATION
 #include "./stb_image.h"
@@ -141,71 +142,54 @@ std::vector<float> generateVertices(std::vector<int> &tilemap, int rows, int col
 }
 int main()
 {
+    std::ifstream tilemapFile("tilemap.txt");
+    std::ifstream walkableFile("walkable.txt");
+
+    if (!tilemapFile) {
+        std::cerr << "Unable to open tilemap file";
+        return 1; // Return an error code
+    }
+    if (!walkableFile) {
+        std::cerr << "Unable to open walkable file";
+        return 1; // Return an error code
+    }
+
+    int rows, cols, rows2, cols2;
+    tilemapFile  >> rows >> cols;
+    walkableFile >> rows2 >> cols2;
+
+    std::vector<int> aaa;
+    aaa.reserve(rows * cols);
+    walkableMatrix.reserve(rows * cols);
+
+    if (rows != rows2 || cols != cols2) {
+        std::cerr << "Tilemap sizes are different in tilemap.txt and walkable.txt";
+        return 1; // Return an error code
+    }
+
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            int value;
+            tilemapFile >> value;
+            aaa.push_back(value);
+
+            int walkableValue;
+            walkableFile >> walkableValue;
+            walkableMatrix.push_back(walkableValue);
+        }
+    }
+
+    tilemapFile.close();
+    walkableFile.close();
 
     imgpatharray = { 
         projectRoot + "/imgs/beeSprites.png",
-    };
-    // std::vector<int> aaa = {
-    //     0, 1, 2, 4, 0, 1, 2, 4,
-    //     4, 0, 1, 2, 4, 0, 1, 2,
-    //     1, 3, 4, 2, 1, 3, 4, 2,
-    //     2, 0, 2, 1, 2, 0, 2, 1,
-    //     0, 1, 2, 4, 0, 1, 2, 4,
-    //     4, 0, 1, 2, 4, 0, 1, 2,
-    //     1, 3, 4, 2, 1, 3, 4, 2,
-    //     2, 0, 2, 1, 2, 0, 2, 1,
-    // };
-    std::vector<int> aaa = {
-        0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4,
-        4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2,
-        1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2,
-        2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1,
-        0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4,
-        4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2,
-        1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2,
-        2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1,
-        0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4,
-        4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2,
-        1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2,
-        2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1,
-        0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4,
-        4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2, 4, 0, 1, 2,
-        1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2, 1, 3, 4, 2,
-        2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1,
     };
     std::vector<float> mainCharacterVertices = {
         -0.1f, -0.1f, -1.0f,   1.0f, 1.0f,
         -0.1f, -0.4f, -1.0f,   1.0f, 0.0f,
         -0.3f, -0.4f, -1.0f,   0.0f, 0.0f,
         -0.3f, -0.1f, -1.0f,   0.0f, 1.0f 
-    };
-    // walkableMatrix = {
-    //     0, 1, 0, 0, 0, 1, 0, 0,
-    //     0, 0, 1, 0, 0, 0, 1, 0,
-    //     1, 0, 0, 0, 1, 0, 0, 0,
-    //     0, 0, 0, 1, 0, 0, 0, 1,
-    //     0, 1, 0, 0, 0, 1, 0, 0,
-    //     0, 0, 1, 0, 0, 0, 1, 0,
-    //     1, 0, 0, 0, 0, 0, 0, 0,
-    //     0, 0, 0, 1, 0, 0, 0, 1,
-    // };
-    walkableMatrix = {
-        0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
-        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
-        1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
-        0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-        0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
-        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
-        1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-        0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
-        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
-        1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
-        0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-        0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,
-        0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
-        1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
     };
 
     std::vector<int> numOfSprites = {6};
@@ -322,7 +306,7 @@ int main()
         indices[ind_pos+3] = base_vertex+1;
         indices[ind_pos+4] = base_vertex+2;
         indices[ind_pos+5] = base_vertex+3;
-        
+
         ind_pos += 6;
     }
 
