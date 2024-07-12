@@ -9,21 +9,18 @@
 #include "./stb_image.h"
 #include <chrono>
 #include <iostream>
-#define TILE_ROWS 16
-#define TILE_COLS 16
-#define NUM_ELEMENTS (TILE_COLS*TILE_ROWS+1)
-#define MAIN_CHARACTER_INDEX (TILE_COLS*TILE_ROWS)
+#define SIN_OF_ANGLE 0.7071f
+#define sSIN_OF_ANGLE "0.7071"
+#define COS_OF_ANGLE 0.7071f
+#define sCOS_OF_ANGLE "0.7071"
 #define NUM_DIFFERENT_TILES 5
 
-
-float sin45 = 0.7071f;
 std::vector<std::string> imgpatharray;
 std::vector<int> walkableMatrix;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window, unsigned int ID, float movement_speed);
+void processInput(GLFWwindow *window, unsigned int ID, float movement_speed, int rows, int cols);
 
 
-unsigned int textures[NUM_ELEMENTS];
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -32,7 +29,7 @@ std::string projectRoot = PROJECT_ROOT;
 
 
 
-GLfloat deltaPos[NUM_ELEMENTS][3];
+GLfloat deltaPos[3];
 char last_movement_direction = 'w';
 
 void checkCompileErrors(unsigned int shader, std::string type){
@@ -58,45 +55,6 @@ void checkCompileErrors(unsigned int shader, std::string type){
     }
 }
 
-void load_images(unsigned int ID){
-    for(int i = 0; i < NUM_ELEMENTS; i++){
-
-
-        glGenTextures(1, &textures[i]);
-        glBindTexture(GL_TEXTURE_2D, textures[i]); 
-         // set the texture wrapping parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // set texture filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // load image, create texture and generate mipmaps
-        int width, height, nrChannels;
-        stbi_set_flip_vertically_on_load(true);
-
-        unsigned char *data = stbi_load(imgpatharray[i].c_str(), &width, &height, &nrChannels, 0);
-        if (data)
-        {
-            if(nrChannels == 4){
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-            }
-            if(nrChannels == 3){
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-            }
-            
-            glGenerateMipmap(GL_TEXTURE_2D);
-        }
-        else
-        {
-            std::cout << "Failed to load texture" << std::endl;
-        }
-        stbi_image_free(data);
-    }
-    glUseProgram(ID);
-
-    glUniform1i(glGetUniformLocation(ID, "img_texture"), 0);
-
-}
 std::vector<float> generateVertices(std::vector<int> &tilemap, int rows, int cols){
     float float_max_rows = float(rows);
     float float_max_cols = float(cols);
@@ -158,8 +116,8 @@ int main()
     tilemapFile  >> rows >> cols;
     walkableFile >> rows2 >> cols2;
 
-    std::vector<int> aaa;
-    aaa.reserve(rows * cols);
+    std::vector<int> tilemapMatrix;
+    tilemapMatrix.reserve(rows * cols);
     walkableMatrix.reserve(rows * cols);
 
     if (rows != rows2 || cols != cols2) {
@@ -171,7 +129,7 @@ int main()
         for (int j = 0; j < cols; ++j) {
             int value;
             tilemapFile >> value;
-            aaa.push_back(value);
+            tilemapMatrix.push_back(value);
 
             int walkableValue;
             walkableFile >> walkableValue;
@@ -185,16 +143,20 @@ int main()
     imgpatharray = { 
         projectRoot + "/imgs/beeSprites.png",
     };
+
+    int num_elements = (rows * cols) + imgpatharray.size();
+
+    unsigned int textures[num_elements];
     std::vector<float> mainCharacterVertices = {
-        -0.1f, -0.1f, -1.0f,   1.0f, 1.0f,
-        -0.1f, -0.4f, -1.0f,   1.0f, 0.0f,
-        -0.3f, -0.4f, -1.0f,   0.0f, 0.0f,
-        -0.3f, -0.1f, -1.0f,   0.0f, 1.0f 
+        -0.6f,  0.2f, -1.0f,   1.0f, 1.0f,
+        -0.6f, -0.1f, -1.0f,   1.0f, 0.0f,
+        -0.8f, -0.1f, -1.0f,   0.0f, 0.0f,
+        -0.8f,  0.2f, -1.0f,   0.0f, 1.0f 
     };
 
     std::vector<int> numOfSprites = {6};
     std::vector<int> numOfActions = {4};
-    for (int i=0; i < (TILE_ROWS * TILE_COLS); i++){
+    for (int i=0; i < (rows * cols); i++){
         imgpatharray.insert(imgpatharray.begin(), projectRoot + "/imgs/tilemap2.png");
         numOfSprites.insert(numOfSprites.begin(), 1);
         numOfActions.insert(numOfActions.begin(), 1);
@@ -243,8 +205,8 @@ int main()
         "{\n"
         "	float angle = radians(45.0);\n"
         "	mat4 rotationMatrix = mat4(\n"
-        "		0.7 * cos(angle),  0.4 *-sin(angle), 0.0, 0.0,\n"
-        "		0.7 * sin(angle),  0.4 * cos(angle), 0.0, 0.0,\n"
+        "		0.7 * " sCOS_OF_ANGLE ",  0.4 *-" sSIN_OF_ANGLE ", 0.0, 0.0,\n"
+        "		0.7 * " sSIN_OF_ANGLE ",  0.4 * " sCOS_OF_ANGLE ", 0.0, 0.0,\n"
         "		0.0,         0.0,        1.0, 0.0,\n"
         "		0.0,         0.0,        0.0, 1.0\n"
         "	);\n"
@@ -290,13 +252,13 @@ int main()
     glDeleteShader(fragment);
 
 
-    std::vector<float> vertices = generateVertices(aaa, TILE_ROWS, TILE_COLS);
+    std::vector<float> vertices = generateVertices(tilemapMatrix, rows, cols);
 
     vertices.insert(vertices.end(), mainCharacterVertices.begin(), mainCharacterVertices.end());
 
-    unsigned int indices[NUM_ELEMENTS * 6];
+    unsigned int indices[num_elements * 6];
     int ind_pos = 0;
-    for (int rect = 0; rect < (NUM_ELEMENTS); rect++) {
+    for (int rect = 0; rect < (num_elements); rect++) {
         int base_vertex = rect*4;
         // triangulo 1:
         indices[ind_pos  ] = base_vertex;
@@ -331,8 +293,41 @@ int main()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    for(int i = 0; i < num_elements; i++){
+        glGenTextures(1, &textures[i]);
+        glBindTexture(GL_TEXTURE_2D, textures[i]); 
+        // set the texture wrapping parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        // set texture filtering parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // load image, create texture and generate mipmaps
+        int width, height, nrChannels;
+        stbi_set_flip_vertically_on_load(true);
 
-    load_images(ID);
+        unsigned char *data = stbi_load(imgpatharray[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            if(nrChannels == 4){
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            }
+            if(nrChannels == 3){
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            }
+
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+        else
+    {
+            std::cout << "Failed to load texture" << std::endl;
+        }
+        stbi_image_free(data);
+    }
+    glUseProgram(ID);
+
+    glUniform1i(glGetUniformLocation(ID, "img_texture"), 0);
+
     glUniform1i(glGetUniformLocation(ID, "actionStep"), 0);
 
     // render loop
@@ -344,21 +339,21 @@ int main()
     {
         // input
         // -----
-        processInput(window, ID, 0.005f);
+        processInput(window, ID, 0.005f, rows, cols);
 
         // render
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        for(int i = 0; i < NUM_ELEMENTS; i++){
+        for(int i = 0; i < num_elements; i++){
             // bind textures on corresponding texture units
             if(i>0 && imgpatharray[i] == imgpatharray[i-1]){
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(i * 6 * sizeof(unsigned int)));
                 continue;
             } else {
                 glUseProgram(ID); 
-                glUniform3fv(glGetUniformLocation(ID, "deltaPos"), 1, &deltaPos[i][0]);
+                glUniform3fv(glGetUniformLocation(ID, "deltaPos"), 1, &deltaPos[0]);
                 glUniform1i(glGetUniformLocation(ID, "numSprites"), numOfSprites[i]);
                 glUniform1i(glGetUniformLocation(ID, "spriteStep"), spriteStep);
                 glUniform1i(glGetUniformLocation(ID, "numActions"), numOfActions[i]);
@@ -393,13 +388,13 @@ int main()
     return 0;
 }
 
-void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
+void processInput(GLFWwindow *window, unsigned int ID, float movement_speed, int rows, int cols)
 {
-    float x = (-0.2f+deltaPos[MAIN_CHARACTER_INDEX][0])/0.7f; 
-    float y = (-0.25f+deltaPos[MAIN_CHARACTER_INDEX][1])/0.4f*-1.0f; 
+    float x = (-0.7f+deltaPos[0])/0.7f; 
+    float y = ( 0.0f+deltaPos[1])/0.4f*-1.0f; 
 
-    int current_x_tile = int(((x* sin45) + (y* sin45) +1.0)*TILE_COLS/2);
-    int current_y_tile = int(((x*-sin45) + (y* sin45) +1.0)*TILE_ROWS/2);
+    int current_x_tile = int(((x* COS_OF_ANGLE) + (y* SIN_OF_ANGLE) +1.0)*cols/2);
+    int current_y_tile = int(((x*-SIN_OF_ANGLE) + (y* COS_OF_ANGLE) +1.0)*rows/2);
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
@@ -410,11 +405,14 @@ void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
             glUniform1i(glGetUniformLocation(ID, "actionStep"), 3);
         }
 
-        int walkableID = walkableMatrix[TILE_COLS * current_y_tile + current_x_tile];
+        int walkableID = walkableMatrix[cols * current_y_tile + current_x_tile];
         if(walkableID == 1){
             glfwSetWindowShouldClose(window, true);
+        } else if(walkableID == 2){
+            std::cout<<"VOCÊ GANHOU"<<std::endl;
+            glfwSetWindowShouldClose(window, true);
         } else {
-            deltaPos[MAIN_CHARACTER_INDEX][1] += movement_speed;
+            deltaPos[1] += movement_speed;
         }
     }
     else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
@@ -423,11 +421,14 @@ void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
             glUniform1i(glGetUniformLocation(ID, "actionStep"), 1);
         }
 
-        int walkableID = walkableMatrix[TILE_COLS * current_y_tile + current_x_tile];
+        int walkableID = walkableMatrix[cols * current_y_tile + current_x_tile];
         if(walkableID == 1){
             glfwSetWindowShouldClose(window, true);
+        } else if(walkableID == 2){
+            std::cout<<"VOCÊ GANHOU"<<std::endl;
+            glfwSetWindowShouldClose(window, true);
         }else{
-            deltaPos[MAIN_CHARACTER_INDEX][0] -= movement_speed;
+            deltaPos[0] -= movement_speed;
         }
     }
     else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
@@ -435,11 +436,14 @@ void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
             last_movement_direction = 's';
             glUniform1i(glGetUniformLocation(ID, "actionStep"), 2);
         }
-        int walkableID = walkableMatrix[TILE_COLS * current_y_tile + current_x_tile];
+        int walkableID = walkableMatrix[cols * current_y_tile + current_x_tile];
         if(walkableID == 1){
             glfwSetWindowShouldClose(window, true);
+        } else if(walkableID == 2){
+            std::cout<<"VOCÊ GANHOU"<<std::endl;
+            glfwSetWindowShouldClose(window, true);
         } else {
-            deltaPos[MAIN_CHARACTER_INDEX][1] -= movement_speed;
+            deltaPos[1] -= movement_speed;
         }
     }
     else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
@@ -447,11 +451,14 @@ void processInput(GLFWwindow *window, unsigned int ID, float movement_speed)
             last_movement_direction = 'd';
             glUniform1i(glGetUniformLocation(ID, "actionStep"), 0);
         }
-        int walkableID = walkableMatrix[TILE_COLS * current_y_tile + current_x_tile];
+        int walkableID = walkableMatrix[cols * current_y_tile + current_x_tile];
         if(walkableID == 1){
             glfwSetWindowShouldClose(window, true);
+        } else if(walkableID == 2){
+            std::cout<<"VOCÊ GANHOU"<<std::endl;
+            glfwSetWindowShouldClose(window, true);
         }else{
-            deltaPos[MAIN_CHARACTER_INDEX][0] += movement_speed;
+            deltaPos[0] += movement_speed;
         }
     }
 }
